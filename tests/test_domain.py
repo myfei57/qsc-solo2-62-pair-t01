@@ -82,13 +82,15 @@ class StoreCase(unittest.TestCase):
 class PipelineCase(unittest.TestCase):
     def test_control_line_is_ordered(self) -> None:
         line = control_line()
-        self.assertEqual(line.count(), 9)
+        self.assertEqual(line.count(), 10)
         self.assertTrue(line.contains(Stage.AMMONIA))
+        self.assertTrue(line.before(Stage.TEMP, Stage.JUDGE))
+        self.assertTrue(line.before(Stage.JUDGE, Stage.COMP))
         self.assertTrue(line.before(Stage.TEMP, Stage.COMP))
         self.assertTrue(line.before(Stage.COMP, Stage.VALVE))
         self.assertFalse(line.before(Stage.AUDIT, Stage.COMP))
         self.assertEqual(line.last(), Stage.AUDIT)
-        self.assertEqual(len(line.steps()), 9)
+        self.assertEqual(len(line.steps()), 10)
         self.assertEqual(line.steps()[0].action, "sample room temperature")
         self.assertIn("control", line.describe())
 

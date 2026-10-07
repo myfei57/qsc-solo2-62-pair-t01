@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+from coldstore.judge import snapshot as judge_snapshot_collect
 from coldstore.ns import control_line
 from coldstore.store import store_state
 
 from .runtime import Runtime
+
+
+def snapshot_module_judge(rt: Runtime) -> dict[str, object]:
+    return judge_snapshot_collect(rt.judge)
 
 
 def collect(rt: Runtime) -> dict[str, object]:
@@ -18,6 +23,7 @@ def collect(rt: Runtime) -> dict[str, object]:
         "compressors": rt.compressors.state().as_dict(),
         "supply": rt.supply.state().as_dict(),
         "temp": rt.temp.state().as_dict(),
+        "judge": snapshot_module_judge(rt),
         "ammonia": rt.ammonia.state().as_dict(),
         "interlock": rt.interlock.state().as_dict(),
         "cold_fans": rt.cold_fans.state().as_dict(),

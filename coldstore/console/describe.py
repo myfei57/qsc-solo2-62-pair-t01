@@ -18,6 +18,10 @@ def collect(rt: Runtime) -> dict[str, str]:
         "compressors": rt.compressors.describe(),
         "supply": rt.supply.describe(),
         "temp": rt.temp.describe(),
+        "judge": (
+            f"judge policy=v{rt.judge.policy().version} probes={len(rt.judge.probes())} "
+            f"mode={rt.judge.policy().jitter_mode} up={rt.judge.policy().up_shift}"
+        ),
         "ammonia": rt.ammonia.describe(),
         "interlock": rt.interlock.describe(),
         "cold_fans": rt.cold_fans.describe(),

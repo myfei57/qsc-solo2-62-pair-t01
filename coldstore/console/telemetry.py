@@ -24,6 +24,9 @@ class Telemetry:
     temp_value: float
     temp_rate: float
     temp_within: bool
+    judge_probes: int
+    judge_faulted: int
+    judge_top_tier: int
     ammonia_last: float
     ammonia_latched: bool
     interlock_tripped: bool
@@ -53,6 +56,9 @@ class Telemetry:
             "temp_value": self.temp_value,
             "temp_rate": self.temp_rate,
             "temp_within": self.temp_within,
+            "judge_probes": self.judge_probes,
+            "judge_faulted": self.judge_faulted,
+            "judge_top_tier": self.judge_top_tier,
             "ammonia_last": self.ammonia_last,
             "ammonia_latched": self.ammonia_latched,
             "interlock_tripped": self.interlock_tripped,
@@ -74,6 +80,8 @@ def collect(rt: Runtime) -> Telemetry:
 
     temp = rt.temp.state()
     compressor_state = rt.compressors.state()
+    judge_probes = rt.judge.probes()
+    judge_states = [rt.judge.state_of(probe) for probe in judge_probes]
     return Telemetry(
         store_keys=rt.store.count(),
         rooms=rt.rooms.count(),
@@ -88,6 +96,9 @@ def collect(rt: Runtime) -> Telemetry:
         temp_value=temp.value,
         temp_rate=temp.rate,
         temp_within=temp.within,
+        judge_probes=len(judge_probes),
+        judge_faulted=sum(1 for state in judge_states if state.faulted),
+        judge_top_tier=max((state.tier for state in judge_states), default=0),
         ammonia_last=rt.ammonia.last(),
         ammonia_latched=rt.ammonia.latched(),
         interlock_tripped=rt.interlock.is_tripped(),

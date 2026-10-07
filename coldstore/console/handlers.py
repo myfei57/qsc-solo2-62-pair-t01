@@ -20,6 +20,7 @@ from coldstore.valve import OPEN, validate_valve
 
 from . import checks, history, ops
 from . import describe as describe_module
+from . import judge_ops
 from . import simulate as simulate_module
 from . import snapshot as snapshot_module
 from . import telemetry as telemetry_module
@@ -262,6 +263,50 @@ def temp_readings(server: "Server", request: Request) -> Response:
 def temp_reset(server: "Server", request: Request) -> Response:
     server.runtime.temp.reset()
     return json_response({"reset": True})
+
+
+def judge_snapshot(server: "Server", request: Request) -> Response:
+    return judge_ops.judge_snapshot(server.runtime, request)
+
+
+def judge_ingest(server: "Server", request: Request) -> Response:
+    return judge_ops.judge_ingest(server.runtime, request)
+
+
+def judge_probes(server: "Server", request: Request) -> Response:
+    return judge_ops.judge_probes(server.runtime, request)
+
+
+def judge_probe(server: "Server", request: Request) -> Response:
+    return judge_ops.judge_probe(server.runtime, request)
+
+
+def judge_policy(server: "Server", request: Request) -> Response:
+    return judge_ops.judge_policy(server.runtime, request)
+
+
+def judge_policy_revise(server: "Server", request: Request) -> Response:
+    return judge_ops.judge_policy_revise(server.runtime, request)
+
+
+def judge_policy_replace(server: "Server", request: Request) -> Response:
+    return judge_ops.judge_policy_replace(server.runtime, request)
+
+
+def judge_replay(server: "Server", request: Request) -> Response:
+    return judge_ops.judge_replay(server.runtime, request)
+
+
+def judge_release(server: "Server", request: Request) -> Response:
+    return judge_ops.judge_release(server.runtime, request)
+
+
+def judge_archive_create(server: "Server", request: Request) -> Response:
+    return judge_ops.judge_archive_create(server.runtime, request)
+
+
+def judge_archive_list(server: "Server", request: Request) -> Response:
+    return judge_ops.judge_archive_list(server.runtime, request)
 
 
 def comp_add(server: "Server", request: Request) -> Response:

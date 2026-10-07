@@ -8,6 +8,7 @@ from .stages import Stage
 
 STAGE_ACTIONS: dict[Stage, str] = {
     Stage.TEMP: "sample room temperature",
+    Stage.JUDGE: "judge the sliding window",
     Stage.AMMONIA: "judge ammonia level",
     Stage.COMP: "stage compressors",
     Stage.VALVE: "open the supply valve",
@@ -73,6 +74,7 @@ def control_line() -> Pipeline:
         name="control",
         stages=(
             Stage.TEMP,
+            Stage.JUDGE,
             Stage.AMMONIA,
             Stage.COMP,
             Stage.VALVE,

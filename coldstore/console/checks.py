@@ -29,6 +29,20 @@ def run_checks(rt: Runtime) -> list[dict[str, str]]:
     else:
         checks.append({"name": "temp", "status": "warn", "detail": "rate outside the window"})
 
+    faulted = [probe for probe in rt.judge.probes() if rt.judge.state_of(probe).faulted]
+    if faulted:
+        checks.append(
+            {"name": "judge", "status": "fail", "detail": "suspect fault on " + ", ".join(faulted)}
+        )
+    else:
+        checks.append(
+            {
+                "name": "judge",
+                "status": "ok",
+                "detail": f"policy v{rt.judge.policy().version}, {len(rt.judge.probes())} probes",
+            }
+        )
+
     if rt.compressors.count() == 0:
         checks.append({"name": "compressors", "status": "warn", "detail": "no compressor registered"})
     elif rt.compressors.load_ratio() >= 1.0:

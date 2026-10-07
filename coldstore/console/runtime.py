@@ -9,6 +9,7 @@ from coldstore.defrost import Controller
 from coldstore.evap import Condenser
 from coldstore.fan import FanSet
 from coldstore.interlock import Interlock
+from coldstore.judge import Judge
 from coldstore.load import LoadCalculator
 from coldstore.quota import Accumulator
 from coldstore.room import RoomRegistry
@@ -30,6 +31,8 @@ class Runtime:
         self.compressors = Bank()
         self.supply = SupplyValve(store)
         self.temp = Collector(store)
+        self.auditor = Auditor(store)
+        self.judge = Judge(store, audit=self._audit_judge)
         self.ammonia = Monitor(store)
         self.interlock = Interlock(store)
         self.cold_fans = cold_fans
@@ -38,5 +41,11 @@ class Runtime:
         self.defrost = Controller(cold_fans, rooms, store)
         self.load = LoadCalculator(store)
         self.accumulator = Accumulator(store)
-        self.auditor = Auditor(store)
         self.scheduler = Scheduler(store)
+
+    def _audit_judge(self, kind: str, detail: dict[str, object]) -> None:
+        """Persist every judge decision through the shared auditor."""
+
+        import json
+
+        self.auditor.record(kind, json.dumps(detail, ensure_ascii=False, sort_keys=True))

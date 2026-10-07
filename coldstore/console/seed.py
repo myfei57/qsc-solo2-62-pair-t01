@@ -8,6 +8,8 @@ from coldstore.evap import Condenser
 from coldstore.evap.condenser import BASELINE_KEY as EVAP_BASELINE_KEY
 from coldstore.evap.condenser import DEFAULT_BASELINE as EVAP_BASELINE
 from coldstore.fan import FanSet
+from coldstore.judge import PolicyBook
+from coldstore.judge.policy import POLICY_KEY as JUDGE_POLICY_KEY
 from coldstore.load import DEFAULT_BASELINE, LoadCalculator
 from coldstore.load.calc import BASELINE_KEY as LOAD_BASELINE_KEY
 from coldstore.load.calc import COEFFICIENT_KEY, DEFAULT_COEFFICIENT
@@ -29,6 +31,11 @@ def seed_defaults(store: Store) -> None:
     collector = Collector(store)
     if not has_key(store, WINDOW_KEY):
         collector.set_window(TEMP_WINDOW)
+
+    if not has_key(store, JUDGE_POLICY_KEY):
+        from coldstore.judge import default_policy
+
+        PolicyBook(store).publish(default_policy(1))
 
     monitor = Monitor(store)
     if not has_key(store, AMMONIA_THRESHOLD_KEY):

@@ -9,6 +9,7 @@ class Stage(str, Enum):
     """A single step on the control line."""
 
     TEMP = "temp"
+    JUDGE = "judge"
     AMMONIA = "ammonia"
     COMP = "comp"
     VALVE = "valve"
