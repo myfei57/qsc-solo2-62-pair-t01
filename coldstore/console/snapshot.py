@@ -18,6 +18,7 @@ def collect(rt: Runtime) -> dict[str, object]:
         "compressors": rt.compressors.state().as_dict(),
         "supply": rt.supply.state().as_dict(),
         "temp": rt.temp.state().as_dict(),
+        "guard": rt.guard.state().as_dict(),
         "ammonia": rt.ammonia.state().as_dict(),
         "interlock": rt.interlock.state().as_dict(),
         "cold_fans": rt.cold_fans.state().as_dict(),

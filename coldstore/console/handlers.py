@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
 
 from coldstore.ammonia import validate_ppm, validate_threshold
 from coldstore.comp import validate_stage
 from coldstore.evap import validate_baseline
 from coldstore.fan import PRIMARY, STANDBY
+from coldstore.guard import execute_actions
 from coldstore.load import validate_baseline as validate_load_baseline
 from coldstore.ns import Stage, control_line
 from coldstore.quota import Quota, check_quota, validate_amount
@@ -262,6 +264,62 @@ def temp_readings(server: "Server", request: Request) -> Response:
 def temp_reset(server: "Server", request: Request) -> Response:
     server.runtime.temp.reset()
     return json_response({"reset": True})
+
+
+def guard_state(server: "Server", request: Request) -> Response:
+    return json_response(server.runtime.guard.state().as_dict())
+
+
+def guard_sample(server: "Server", request: Request) -> Response:
+    probe = request.str_field("probe")
+    value = request.float_field("value")
+    at = request.int_field("at") if "at" in request.payload else None
+    outcome = server.runtime.guard.ingest(probe, value, at)
+    payload = outcome.as_dict()
+    if outcome.actions:
+        executed = execute_actions(server.runtime.compressors, outcome.actions)
+        server.runtime.auditor.record(
+            "guard.action",
+            json.dumps({"probe": probe, "results": executed}, ensure_ascii=False, sort_keys=True),
+        )
+        payload["executed"] = executed
+    return json_response(payload)
+
+
+def guard_verdicts(server: "Server", request: Request) -> Response:
+    probe = request.str_field("probe", "")
+    limit = request.int_field("limit", 50)
+    return json_response({"verdicts": server.runtime.guard.verdicts(probe or None, limit)})
+
+
+def guard_policy(server: "Server", request: Request) -> Response:
+    guard = server.runtime.guard
+    current = guard.policy()
+    return json_response(
+        {
+            "current": current.version,
+            "spec": current.spec(),
+            "versions": [policy.as_dict() for policy in guard.policies()],
+        }
+    )
+
+
+def guard_policy_set(server: "Server", request: Request) -> Response:
+    policy = server.runtime.guard.set_policy(request.payload)
+    return json_response(policy.as_dict())
+
+
+def guard_replay(server: "Server", request: Request) -> Response:
+    probe = request.str_field("probe")
+    since = request.int_field("since") if "since" in request.payload else None
+    until = request.int_field("until") if "until" in request.payload else None
+    return json_response(server.runtime.guard.replay(probe, since, until).as_dict())
+
+
+def guard_reset(server: "Server", request: Request) -> Response:
+    probe = request.str_field("probe", "")
+    server.runtime.guard.reset(probe or None)
+    return json_response({"reset": probe or "all"})
 
 
 def comp_add(server: "Server", request: Request) -> Response:

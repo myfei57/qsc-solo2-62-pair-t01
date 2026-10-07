@@ -58,6 +58,7 @@ class ConsoleCase(unittest.TestCase):
                 "compressors",
                 "supply",
                 "temp",
+                "guard",
                 "ammonia",
                 "interlock",
                 "cold_fans",
@@ -158,6 +159,56 @@ class ConsoleCase(unittest.TestCase):
         self.assertEqual(status, 200)
         status, body = self.call("POST", "/room/remove", {"id": "r1"})
         self.assertEqual(body["removed"], "r1")
+
+    def test_guard_routes(self) -> None:
+        for index, value in enumerate([-18.0, -17.2, -16.4], start=1):
+            status, body = self.call(
+                "POST", "/guard/sample", {"probe": "p1", "value": value, "at": index}
+            )
+            self.assertEqual(status, 200)
+        self.assertEqual(body["tier_name"], "watch")
+        self.assertEqual(body["verdict"]["policy_version"], 1)
+        self.assertEqual(body["executed"], [{"action": "audit", "ok": True, "delivered": False}])
+
+        status, state = self.call("GET", "/guard")
+        self.assertEqual(status, 200)
+        self.assertEqual(state["policy"]["current"], 1)
+        self.assertEqual(state["probes"][0]["probe"], "p1")
+        self.assertEqual(state["probes"][0]["tier"], 1)
+
+        status, verdicts = self.call("GET", "/guard/verdicts", {"probe": "p1"})
+        self.assertEqual(status, 200)
+        self.assertEqual(len(verdicts["verdicts"]), 2)
+
+        status, policy = self.call("POST", "/guard/policy", {"window_seconds": 60})
+        self.assertEqual(status, 200)
+        self.assertEqual(policy["version"], 2)
+        status, policy = self.call("GET", "/guard/policy")
+        self.assertEqual(policy["current"], 2)
+        self.assertEqual(len(policy["versions"]), 2)
+        status, error = self.call("POST", "/guard/policy", {"window_seconds": 1})
+        self.assertEqual(status, 400)
+        self.assertIn("window_seconds", error["error"])
+
+        status, report = self.call("POST", "/guard/replay", {"probe": "p1"})
+        self.assertEqual(status, 200)
+        self.assertEqual(report["windows"], 2)
+        self.assertEqual(report["tier_changes"], 1)
+        self.assertTrue(report["digest"])
+
+        status, entries = self.call("POST", "/audit/filter", {"kind": "guard.tier"})
+        self.assertEqual(status, 200)
+        self.assertEqual(len(entries["entries"]), 1)
+        self.assertIn("guard.action", self.call("GET", "/audit/summary")[1]["by_kind"])
+
+        status, snapshot = self.call("GET", "/snapshot")
+        self.assertEqual(status, 200)
+        self.assertEqual(snapshot["guard"]["probes"][0]["tier"], 1)
+
+        status, _ = self.call("POST", "/guard/reset", {"probe": "p1"})
+        self.assertEqual(status, 200)
+        _, state = self.call("GET", "/guard")
+        self.assertEqual(state["probes"], [])
 
     def test_temp_routes(self) -> None:
         status, body = self.call("GET", "/temp")

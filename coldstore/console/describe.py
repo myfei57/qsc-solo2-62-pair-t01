@@ -18,6 +18,7 @@ def collect(rt: Runtime) -> dict[str, str]:
         "compressors": rt.compressors.describe(),
         "supply": rt.supply.describe(),
         "temp": rt.temp.describe(),
+        "guard": rt.guard.describe(),
         "ammonia": rt.ammonia.describe(),
         "interlock": rt.interlock.describe(),
         "cold_fans": rt.cold_fans.describe(),

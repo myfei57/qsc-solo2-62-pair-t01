@@ -8,6 +8,7 @@ from coldstore.comp import Bank
 from coldstore.defrost import Controller
 from coldstore.evap import Condenser
 from coldstore.fan import FanSet
+from coldstore.guard import Guard
 from coldstore.interlock import Interlock
 from coldstore.load import LoadCalculator
 from coldstore.quota import Accumulator
@@ -39,4 +40,5 @@ class Runtime:
         self.load = LoadCalculator(store)
         self.accumulator = Accumulator(store)
         self.auditor = Auditor(store)
+        self.guard = Guard(store, self.auditor)
         self.scheduler = Scheduler(store)
